@@ -1,0 +1,12 @@
+## Interface: 120005, 120007, 120100
+## Title: Fiamma's Collector | DuckMoo Services
+## Notes: A compact ATT companion made for Fiamma. Legacy rankings, quest zones, and ATDART targets.
+## Author: DuckMoo Media
+## Version: 0.1.0
+## SavedVariables: FiammaCollectorDB
+## OptionalDeps: AllTheThings
+## Category: Collections
+Core.lua
+ATT.lua
+UI.lua
+Minimap.lua

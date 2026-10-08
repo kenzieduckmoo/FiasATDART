@@ -1,0 +1,22 @@
+name: Addon checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+      - name: Install test runtime
+        run: python -m pip install -r requirements-dev.txt
+      - name: Run Lua 5.1 regression checks
+        run: python tests/run_tests.py
+      - name: Verify installable package
+        run: python tools/package.py
