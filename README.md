@@ -4,7 +4,7 @@ Custom version of the ATT tab from DuckMoo Services: Character Folio, made for F
 
 The installed addon folder remains **FiammaCollector** for compatibility with v0.1.0.
 
-**DuckMoo Services · v0.1.1 · By DuckMoo Media**
+**DuckMoo Services · v0.1.2 · By DuckMoo Media**
 
 A little collector cockpit made for Fiamma: black and charcoal surfaces, dark purple controls, white text, and yellow numbers. It contains the ATT functionality from Character Folio in a separate, compact addon.
 
@@ -17,6 +17,7 @@ Open ATT and allow its main list to prepare, then click **Refresh**. On a charac
 ## The compact window
 
 - **ATDART % Target:** The legacy dungeon or raid with the lowest exact completion fraction. Equal minima are picked randomly once per capture. The saved target survives browsing and reloads. This is the only percentage display.
+- **ATDART exclusion:** Dawn of the Infinite cannot be the ATDART target. It remains in the normal dungeon rankings and capture data. Existing saved Dawn targets are replaced automatically on display, including offline snapshots; other saved targets keep their current choice.
 - **Legacy Dungeons / Legacy Raids:** Highest missing-count opportunities first. Legacy stops at Dragonflight, excluding The War Within and Midnight. Unclassified instances are omitted rather than guessed.
 - **Unfinished Quests:** Zones ranked by distinct visible, collectible, uncollected quests. Capital cities are excluded. Expansion labels use ATT metadata and map ancestry.
 - **Section headers:** Click the left side to collapse or expand. Use the right side to filter that section independently by expansion. All matching snapshot rows remain accessible through the shared scrollbar.

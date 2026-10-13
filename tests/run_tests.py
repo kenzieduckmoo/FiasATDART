@@ -237,3 +237,27 @@ F.SelectATDART(tied,function(n)assert(n==2);return 2 end);assert(F.GetATDART(tie
 print('PASS: Firelands 97.03% / 9 missing, alternate/nested/dynamic references, traversal order, ambiguous/missing canonical data, old-capture refresh requirement, exact ties and native percentage label')
 ''')
 print('All tests passed. Actual Retail client verification is still required.')
+lua.execute(r'''
+local dawn={instanceID=1209,tier=10,tierID=10,kind='dungeon',text='Localized dungeon name',name='Localized dungeon name',progress=0,total=100,missing=100,visible=true}
+local other={instanceID=10,tier=10,tierID=10,kind='dungeon',text='Another dungeon',name='Another dungeon',progress=50,total=100,missing=50,visible=true}
+local snapshot={schema=4,seenAt=NOW,mode='Test profile',completion={dawn,other},dungeons={dawn,other},raids={},zones={}}
+F.SelectATDART(snapshot);assert(snapshot.atdart.instanceID==10,'Dawn selected despite exclusion')
+assert(#snapshot.completion==2 and #snapshot.dungeons==2 and snapshot.dungeons[1]==dawn,'ATDART exclusion removed ordinary dungeon data')
+-- A saved 0.1.1 Dawn target is replaced without a live ATT capture.
+snapshot.targetEvaluated=true;snapshot.atdart=F.Clean(dawn)
+AllTheThings=nil;F.db.characters[F.current].att=snapshot;F.selected=F.current;F.db.settings.filters={}
+F.Render();assert(snapshot.atdart.instanceID==10 and #F.visibleRows.dungeons==2)
+local saved=snapshot.atdart;F.Render();assert(snapshot.atdart==saved,'Replacement rerolls on every draw')
+-- An unaffected saved target keeps its identity and its previous tie choice.
+local tie=F.Clean(other);tie.instanceID=11;snapshot.completion[#snapshot.completion+1]=tie
+assert(F.GetATDART(snapshot)==saved,'Unrelated saved target was rerolled')
+local only={schema=4,completion={dawn},atdart=F.Clean(dawn),targetEvaluated=true}
+assert(F.GetATDART(only)==nil and only.targetEvaluated and #only.completion==1)
+assert(F.GetATDART(only)==nil,'Dawn-only snapshot selected a blocked dungeon')
+-- The actual capture still includes Dawn in both general instance lists.
+F.Current();AllTheThings={HeaderConstants={DUNGEONS_AND_RAIDS=102,DUNGEONS=100},Windows={Prime={data={g={{headerID=102,g={{headerID=100,g={dawn,other}}}}}}}}}
+F.RefreshCurrent();local captured=F.db.characters[F.current].att
+assert(#captured.dungeons==2 and #captured.completion==2 and captured.atdart.instanceID==10)
+assert(dawn.progress==0 and dawn.total==100,'Read-only ATT data changed')
+print('PASS: Dawn excluded only from ATDART; general rankings retained, localized IDs, cached/offline repair, unaffected target stability and Dawn-only snapshots')
+''')

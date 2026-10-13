@@ -1,5 +1,5 @@
 local addon,F=...
-F.name=addon;F.version='0.1.1';F.Model={}
+F.name=addon;F.version='0.1.2';F.Model={}
 local M=F.Model
 function F.Safe(fn,...)
     if type(fn)~='function' then return nil end

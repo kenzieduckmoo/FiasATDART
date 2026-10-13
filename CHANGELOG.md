@@ -1,3 +1,9 @@
+# v0.1.2
+
+- Exclude Dawn of the Infinite (Encounter Journal instance 1209) from ATDART selection only. Preserve its normal dungeon ranking and captured completion data.
+- Replace previously saved Dawn targets on display, including offline snapshots, without rerolling other saved targets or requiring a new capture.
+- Verify new captures, saved targets, localized names, stable replacement and Dawn-only snapshots under Lua 5.1. Preserve the 0.1.1 completion-count repair.
+
 # v0.1.1
 
 - Package the complete installable addon for CurseForge with the FiammaCollector root folder, runtime code, license and guide; exclude development and repository files.

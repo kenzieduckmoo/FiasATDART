@@ -41,10 +41,13 @@ function F.IsLegacyATT(row)
 end
 -- Compare exact completion fractions, rather than rounded display values.
 -- Pick a tied minimum only when a snapshot is captured or first upgraded.
+-- Encounter Journal ID; exclude only from ATDART, not the captured rankings.
+local atdartExcluded={[1209]=true} -- Dawn of the Infinite
+local function excludedATDART(row)return row and atdartExcluded[tonumber(row.instanceID)]end
 function F.SelectATDART(snapshot,random)
     local candidates={};local best
     for _,row in ipairs(snapshot.completion or {})do
-        if F.IsLegacyATT(row) and type(row.total)=='number' and row.total>0 and type(row.progress)=='number' and row.progress>=0 and row.progress<=row.total then
+        if not excludedATDART(row) and F.IsLegacyATT(row) and type(row.total)=='number' and row.total>0 and type(row.progress)=='number' and row.progress>=0 and row.progress<=row.total then
             local compare=best and row.progress*best.total-best.progress*row.total or -1
             if compare<0 then best=row;candidates={row}
             elseif compare==0 then candidates[#candidates+1]=row end
@@ -59,7 +62,9 @@ function F.GetATDART(snapshot)
     -- Old captures may contain alternate/reference instance groups. Do not
     -- present their cached percentages as if they were main-list completion.
     if (snapshot.schema or 0)<4 then return nil end
-    if not snapshot.targetEvaluated then F.SelectATDART(snapshot)end
+    -- Repair an already-saved Dawn target, including offline captures, once.
+    -- Other saved targets keep their existing random tie selection.
+    if not snapshot.targetEvaluated or excludedATDART(snapshot.atdart)then F.SelectATDART(snapshot)end
     return snapshot.atdart
 end
 function F.ATTStatus()
