@@ -138,7 +138,9 @@ local root={modeString='Character mode',g={
  {tierID=11,headerID=101,g={{instanceID=12,text='War Within raid',total=10,progress=0,visible=true}}},
  {tierID=12,headerID=101,g={{instanceID=13,text='Midnight raid',total=10,progress=0,visible=true}}}
 }}
-AllTheThings={Windows={Prime={data=root}},HeaderConstants={RAIDS=101,DUNGEONS=100},ToggleMainList=function()opened=opened+1 end,GroupFilter=function()return true end}
+local mainInstances={headerID=102,g={root.g[1],root.g[2],root.g[5],root.g[6]}}
+root.g={mainInstances,root.g[3],root.g[4]}
+AllTheThings={Windows={Prime={data=root}},HeaderConstants={DUNGEONS_AND_RAIDS=102,RAIDS=101,DUNGEONS=100},ToggleMainList=function()opened=opened+1 end,GroupFilter=function()return true end}
 F.RefreshCurrent();local c=F.db.characters['Player-1'];local snapshot=c.att
 assert(#snapshot.dungeons==1 and #snapshot.raids==1 and #snapshot.zones==1 and snapshot.zones[1].missing==1)
 assert(snapshot.zones[1].expansion=='The Burning Crusade' and #snapshot.completion==2)
@@ -183,5 +185,55 @@ local saved=F.Clean(FiammaCollectorDB);FiammaCollectorDB=saved;F.Init();assert(F
 assert(F.db.settings.width==w+40)
 AllTheThings=nil;F.Render();assert(F.status:GetText():find('Enable All The Things') and #F.visibleRows.raids==1,'Offline cached data disappeared when ATT was unavailable')
 print('PASS: standalone data isolation, ATT unavailable/loading states, opening ATT, legacy cutoff, read-only ranks, quest deduplication, target percentages/persistence, independent filters, collapse fitting, offline characters, close controls, stable frame reuse, combat deferral, resize, minimap and slash commands')
+''')
+lua.execute(r'''
+-- Firelands screenshot regression: the main ATT row is 294/303 (9 missing),
+-- while a different reference to the same instance has 10/193 (5.18%).
+F.Current();F.selected=F.current;F.db.settings.filters={};F.db.settings.collapsed={}
+InCombatLockdown=function()return false end
+local firelands={instanceID=78,tierID=4,text='Firelands',total=303,progress=294,visible=true}
+local alternate={instanceID=78,tierID=4,text='Firelands',total=193,progress=10,visible=true}
+local nested={instanceID=78,tierID=4,text='Firelands difficulty reference',total=193,progress=10,visible=true}
+firelands.g={nested}
+local main={headerID=102,g={firelands}}
+local reference={headerID=101,tierID=4,g={alternate}}
+local dynamic={sourceIgnored=true,g={alternate,firelands}}
+main.g[2]=dynamic
+local root={modeString='Insane Account Completion Mode',g={main,reference}}
+AllTheThings={Windows={Prime={data=root}},HeaderConstants={DUNGEONS_AND_RAIDS=102,RAIDS=101,DUNGEONS=100}}
+EJ_GetCurrentTier=function()return 4 end;EJ_GetNumTiers=function()return 4 end
+EJ_SelectTier=function()end
+EJ_GetInstanceByIndex=function(i,raid)if i==1 and raid then return 78 end end
+local function capture()
+ F.RefreshCurrent();return F.db.characters[F.current].att
+end
+local snapshot=capture()
+assert(snapshot.schema==4 and #snapshot.completion==1)
+assert(snapshot.atdart.progress==294 and snapshot.atdart.total==303)
+assert(snapshot.raids[1].missing==9 and string.format('%.2f',100*snapshot.atdart.progress/snapshot.atdart.total)=='97.03')
+F.Render();assert(F.pool[1].number:GetText()=='97.03%','Native target label disagrees with main ATT counts')
+-- Walking a reference first must not make the shared canonical object disappear.
+root.g={reference,main};snapshot=capture();assert(snapshot.atdart.progress==294)
+local other={instanceID=79,tierID=4,text='Another raid',total=100,progress=20,visible=true}
+main.g[3]=other;AllTheThings.HeaderConstants.RAIDS=101;main.headerID=102
+-- Preserve classification from ATT raid headers without an EJ match.
+main.g[3]={headerID=101,g={other}}
+snapshot=capture();assert(snapshot.atdart.instanceID==79,'Wrong Firelands reference still dominates ATDART')
+assert(firelands.total==303 and firelands.progress==294 and alternate.progress==10,'Read-only capture changed ATT')
+-- Conflicting canonical entries are omitted, rather than selecting whichever
+-- happens to have the largest missing count or whichever was visited last.
+main.g[4]={instanceID=78,tierID=4,total=193,progress=10,visible=true}
+snapshot=capture();assert(snapshot.ambiguousInstances==1 and #snapshot.completion==1 and snapshot.atdart.instanceID==79)
+-- Without the actual main category, do not fall back to arbitrary copies.
+local prior=snapshot;root.g={reference};snapshot=capture();assert(snapshot==prior and F.attMessage,'Unavailable main data overwrote a valid snapshot')
+-- Old saved wrong targets remain stored but are not shown as trustworthy data.
+local old={schema=3,seenAt=NOW,mode='Old mode',completion={alternate},atdart=F.Clean(alternate),targetEvaluated=true,raids={alternate},dungeons={},zones={}}
+F.db.characters[F.current].att=old;F.Render()
+assert(F.GetATDART(old)==nil and F.pool[1].number:GetText()=='' and #F.visibleRows.raids==0)
+assert(F.status:GetText():find('Refresh') and old.atdart.progress==10,'Old snapshot was deleted or silently treated as fixed')
+-- Exact fractions and random ties remain stable within one validated capture.
+local tied={schema=4,completion={{instanceID=1,tier=4,progress=1,total=3},{instanceID=2,tier=4,progress=2,total=6}}}
+F.SelectATDART(tied,function(n)assert(n==2);return 2 end);assert(F.GetATDART(tied).instanceID==2)
+print('PASS: Firelands 97.03% / 9 missing, alternate/nested/dynamic references, traversal order, ambiguous/missing canonical data, old-capture refresh requirement, exact ties and native percentage label')
 ''')
 print('All tests passed. Actual Retail client verification is still required.')

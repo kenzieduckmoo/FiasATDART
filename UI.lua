@@ -128,20 +128,21 @@ function F.Render()
     F.refresh:SetEnabled(canRefresh);F.refresh.caption:SetTextColor(canRefresh and 1 or .55,canRefresh and 1 or .55,canRefresh and 1 or .60)
     F.refresh.caption:SetText(F.attBusy and 'Reading...' or 'Refresh')
     local status=F.attMessage or message or (snapshot and (date('%b %d %I:%M %p',snapshot.seenAt)..' | '..M.Display(snapshot.mode))) or 'Open ATT, then Refresh to capture opportunities.'
+    if snapshot and(snapshot.schema or 0)<4 then status='Older capture — Refresh to update ATT instance counts.'end
     F.status:SetText(M.Plain(status))
     F.character:SetScript('OnEnter',nil);F.character:SetScript('OnLeave',nil)
     tooltip(F.character,c and (c.name or '?') or 'Character snapshot',{status,'Offline snapshots are retained. Select a recorded character here.'})
     local y=0
     local target=snapshot and F.GetATDART(snapshot)
     local t=row(y,43);t.name:SetText('ATDART % Target');t.number:SetText(target and string.format('%.2f%%',100*target.progress/target.total) or '')
-    t.detail:Show();t.detail:SetText(M.Plain(target and M.Display(target.name) or (snapshot and (snapshot.completion and 'No eligible legacy completion data.' or 'Refresh to capture completion totals.') or 'Enable ATT and capture your first snapshot.')))
+    t.detail:Show();t.detail:SetText(M.Plain(target and M.Display(target.name) or (snapshot and ((snapshot.schema or 0)<4 and'Refresh to update instance counts.'or snapshot.completion and 'No eligible legacy completion data.' or 'Refresh to capture completion totals.') or 'Enable ATT and capture your first snapshot.')))
     tooltip(t,'ATDART % Target',{target and M.Display(target.name) or 'No eligible completion data.',target and (F.ATTExpansionLabel(target,false)..' | '..target.kind..' | '..target.progress..' / '..target.total..' collected') or 'Refresh with ATT ready to record totals.','Lowest completion across legacy dungeons and raids. Random ties stay fixed until a new capture.'});y=y+45
     F.visibleRows={}
     for _,section in ipairs({{'dungeons','Legacy Dungeons'},{'raids','Legacy Raids'},{'zones','Unfinished Quests'}})do
         local key,title=section[1],section[2];local filter=F.db.settings.filters[key]
         local list={};local expansions={}
         for _,r in ipairs(snapshot and snapshot[key] or {})do
-            if key=='zones' or F.IsLegacyATT(r)then
+            if key=='zones' or((snapshot.schema or 0)>=4 and F.IsLegacyATT(r))then
                 local expansion=F.ATTExpansionLabel(r,key=='zones');expansions[expansion]=true
                 if not filter or filter==expansion then list[#list+1]=r end
             end

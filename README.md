@@ -4,7 +4,7 @@ Custom version of the ATT tab from DuckMoo Services: Character Folio, made for F
 
 The installed addon folder remains **FiammaCollector** for compatibility with v0.1.0.
 
-**DuckMoo Services · v0.1.0 · By DuckMoo Media**
+**DuckMoo Services · v0.1.1 · By DuckMoo Media**
 
 A little collector cockpit made for Fiamma: black and charcoal surfaces, dark purple controls, white text, and yellow numbers. It contains the ATT functionality from Character Folio in a separate, compact addon.
 
@@ -31,11 +31,13 @@ ATT unavailable or not ready? The window shows a message, while previously saved
 
 Counts follow the ATT profile and character/availability filters present at capture. They represent collection opportunities, not drop probabilities, guaranteed obtainable rewards, or runs required. An account-wide profile can include collectibles unavailable to a particular character. Configure ATT's filters before capture for useful character-specific results.
 
-The collector reads ATT's prepared main tree, performs small batched scans, and never modifies ATT's data or collection flags. The Encounter Journal tier is restored after classification. Snapshot timestamps use your computer's local time. Offline snapshots are saved observations, not live queries. Refresh is deferred in combat.
+The collector reads ATT's prepared main tree, performs small batched scans, and never modifies ATT's data or collection flags. Instance totals come from the outer instance entries in its main Dungeons & Raids category. Alternate copies under achievements, professions, dynamic shortcuts and nested difficulty references do not override those counts. If two canonical entries conflict, that instance is omitted rather than choosing the worse-looking copy. If the main category is unavailable, the previous snapshot is retained and a loading message is shown. The Encounter Journal tier is restored after classification. Snapshot timestamps use your computer's local time. Offline snapshots are saved observations, not live queries. Refresh is deferred in combat.
+
+**Upgrading from 0.1.0:** open ATT and let its main list finish updating, then click Refresh on each character whose snapshot you use. Older captures are retained, but their instance rankings and ATDART percentage are hidden until refreshed because they may contain incorrect reference-group totals. Quest snapshots remain available. No SavedVariables deletion is needed. Firelands at 294/303 collected is 97.03% with 9 missing; a separate 10/193 reference must not replace that main entry. ATDART may then select a different, genuinely less-complete instance.
 
 ## Source and testing
 
-The ZIP includes the complete Lua source and tests. From this repository, install `requirements-dev.txt`, then run `python3 tests/run_tests.py`. Build the installable ZIP with `python3 tools/package.py`. These tests run Lua 5.1 with mocked Blizzard UI/APIs; actual Retail client validation is still required.
+The installable ZIP includes all runtime Lua files, the TOC, license and user documentation, inside the required FiammaCollector folder. It is also the full addon package for CurseForge upload; development tests, tools, repository files and player data are excluded. Tests remain in this repository: install `requirements-dev.txt`, then run `python3 tests/run_tests.py`. Build the ZIP with `python3 tools/package.py`. These tests run Lua 5.1 with mocked Blizzard UI/APIs; actual Retail client validation is still required.
 
 The ATT adapter is derived from DuckMoo Services: Character Folio v0.3.0. This addon has its own `FiammaCollectorDB` and can coexist with Folio and Concentration Planner. All The Things remains a separately installed addon; none of its source or database is bundled.
 

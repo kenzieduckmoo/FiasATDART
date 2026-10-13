@@ -56,6 +56,9 @@ function F.SelectATDART(snapshot,random)
     return snapshot.atdart
 end
 function F.GetATDART(snapshot)
+    -- Old captures may contain alternate/reference instance groups. Do not
+    -- present their cached percentages as if they were main-list completion.
+    if (snapshot.schema or 0)<4 then return nil end
     if not snapshot.targetEvaluated then F.SelectATDART(snapshot)end
     return snapshot.atdart
 end
@@ -73,8 +76,18 @@ function F.RefreshATT()
     if F.attBusy then return end
     F.attBusy=true;F.attMessage='Reading ATT collection opportunities...';F.DrawIfShown()
     local guid=F.current;local c=F.db.characters[guid]
-    local stack={{node=root}};local visited={};local instances={};local zones={};local count=0
     local H=app.HeaderConstants or {}
+    -- ATT repeats instance IDs in achievements, professions, seasonal shortcuts
+    -- and difficulty/reference groups. Only its actual Dungeons & Raids section
+    -- owns the completion shown in the main list.
+    local instanceRoot
+    for _,node in ipairs(root.g or {})do
+        if H.DUNGEONS_AND_RAIDS and node.headerID==H.DUNGEONS_AND_RAIDS then instanceRoot=node;break end
+    end
+    if not instanceRoot then
+        F.attBusy=false;F.attMessage='Open ATT Dungeons & Raids, then Refresh to capture instance counts.';F.DrawIfShown();return
+    end
+    local stack={{node=root}};local visited={};local canonicalVisited={};local instances={};local ambiguous={};local zones={};local count=0
     local journalKinds={};local journalTiers={}
     -- Encounter Journal IDs match ATT instanceID. Restore the user's tier.
     local selected=F.Safe(EJ_GetCurrentTier)
@@ -98,8 +111,12 @@ function F.RefreshATT()
             while #stack>0 and budget<350 do
                 local frame=table.remove(stack);local n=frame.node
                 budget=budget+1;count=count+1
-                if type(n)=='table' and not visited[n] then
-                    visited[n]=true
+                if type(n)=='table' then
+                    local inInstances=frame.inInstances or n==instanceRoot
+                    local reference=frame.reference or n.sourceIgnored or n.dynamicID or n.dynamic_withsubgroups
+                    local seen=inInstances and not reference and not frame.instanceParent and canonicalVisited or visited
+                    if not seen[n]then
+                    seen[n]=true
                     local kind=frame.kind;local tier=F.ATTNodeTier(n,frame.tier)
                     if H.RAIDS and n.headerID==H.RAIDS then kind='raid' end
                     if H.DUNGEONS and n.headerID==H.DUNGEONS then kind='dungeon' end
@@ -108,12 +125,11 @@ function F.RefreshATT()
                         kind=journalKinds[n.instanceID] or kind;tier=tier or journalTiers[n.instanceID]
                         zone=nil
                         local total,progress=n.total,n.progress
-                        if kind and type(total)=='number' and type(progress)=='number' and total>0 and progress>=0 and progress<=total and n.visible~=false and tier and tier<=10 then
+                        if inInstances and not reference and not frame.instanceParent and kind and type(total)=='number' and type(progress)=='number' and total>0 and progress>=0 and progress<=total and n.visible~=false and tier and tier<=10 then
                             local key=kind..':'..n.instanceID
                             local old=instances[key];local missing=total-progress
-                            if not old or missing>old.missing then
-                                instances[key]={name=F.Clean(n.text) or ('Instance '..n.instanceID),missing=missing,total=total,progress=progress,kind=kind,expansion=tiers[tier],tier=tier,instanceID=n.instanceID}
-                            end
+                            if old and(old.total~=total or old.progress~=progress)then ambiguous[key]=true end
+                            if not old then instances[key]={name=F.Clean(n.text) or ('Instance '..n.instanceID),missing=missing,total=total,progress=progress,kind=kind,expansion=tiers[tier],tier=tier,instanceID=n.instanceID}end
                         end
                     elseif not kind and n.mapID then
                         local map=F.Safe(C_Map and C_Map.GetMapInfo,n.mapID)
@@ -132,7 +148,8 @@ function F.RefreshATT()
                         if eligible and z and not z.quests[n.questID] then z.quests[n.questID]=true;z.missing=z.missing+1 end
                     end
                     if n.visible~=false then
-                        for _,child in ipairs(n.g or {}) do stack[#stack+1]={node=child,kind=kind,tier=tier,zone=zone} end
+                        for _,child in ipairs(n.g or {}) do stack[#stack+1]={node=child,kind=kind,tier=tier,zone=zone,inInstances=inInstances,reference=reference,instanceParent=frame.instanceParent or n.instanceID} end
+                    end
                     end
                 end
             end
@@ -141,10 +158,13 @@ function F.RefreshATT()
             F.attBusy=false;F.attMessage='ATT data could not be read by this version of the adapter. Update ATT and try Refresh. No collection data was changed.';F.DrawIfShown();return
         end
         if #stack>0 then C_Timer.After(.01,step);return end
-        local result={schema=3,seenAt=F.Now(),mode=F.Clean(root.modeString) or 'ATT active profile',dungeons={},raids={},zones={},completion={}}
-        for _,r in pairs(instances) do
+        local result={schema=4,seenAt=F.Now(),mode=F.Clean(root.modeString) or 'ATT active profile',dungeons={},raids={},zones={},completion={},instanceSource=instanceRoot and'main Dungeons & Raids'or'unavailable',ambiguousInstances=0}
+        for key,r in pairs(instances) do
+            if ambiguous[key]then result.ambiguousInstances=result.ambiguousInstances+1
+            else
             result.completion[#result.completion+1]=r
             if r.missing>0 then table.insert(r.kind=='raid' and result.raids or result.dungeons,r)end
+            end
         end
         table.sort(result.completion,function(a,b)return a.kind..':'..a.instanceID<b.kind..':'..b.instanceID end)
         F.SelectATDART(result)
