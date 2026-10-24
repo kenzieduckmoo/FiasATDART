@@ -5,8 +5,9 @@
 ## Version: 0.1.2
 ## SavedVariables: FiammaCollectorDB
 ## OptionalDeps: AllTheThings
-## Category: Collections
+## Category: DuckMoo Media
 Core.lua
 ATT.lua
 UI.lua
 Minimap.lua
+

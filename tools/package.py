@@ -5,7 +5,7 @@ version=re.search(r'^## Version:\s*(\S+)',(root/'FiammaCollector.toc').read_text
 out=root.parent/f'FiammaCollector-{version}.zip'
 toc=root/'FiammaCollector.toc'
 runtime=[line.strip().replace('\\','/') for line in toc.read_text().splitlines() if line.strip() and not line.lstrip().startswith('#')]
-files={toc,root/'LICENSE',root/'README.md',root/'CHANGELOG.md'}
+files={toc,root/'LICENSE',root/'README.md',root/'CHANGELOG.md',root/'USER-GUIDE.txt'}
 for name in runtime:
     path=(root/name).resolve()
     assert path.is_relative_to(root) and path.is_file(),f'Missing or invalid runtime file: {name}'
@@ -24,3 +24,4 @@ with zipfile.ZipFile(out) as z:
     assert all(name.startswith('FiammaCollector/') for name in z.namelist())
     assert not any(part in {'.git','.github','tests','tools','__pycache__'} for name in z.namelist() for part in name.split('/'))
 print(out)
+

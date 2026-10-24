@@ -1,0 +1,112 @@
+FIA'S ATDART / FIAMMA COLLECTOR
+
+PURPOSE AND INSTALL IDENTITY
+A standalone ATT collection companion made for Fiamma. The runtime folder and
+TOC remain FiammaCollector for SavedVariables/update compatibility. The source
+repository is FiasATDART. It does not require Character Folio or Planner.
+All The Things (ATT) is optional to load the window and view retained snapshots,
+but it must be installed/enabled/prepared to collect new opportunities.
+
+FIRST USE AND COMMANDS
+Enable Fiamma Collector and ATT for the current character. Open ATT's main list
+and allow it to prepare. Type /fiamma or /atdart, or click the minimap icon, then
+Refresh. First opening attempts capture if ATT is ready; subsequent refreshes
+are deliberate snapshots. /fiamma refresh opens and refreshes; /fiamma minimap
+toggles the button. Minimap left-click toggles, right-click refreshes and dragging
+changes its angle. Refresh can defer in combat.
+
+READING THE WINDOW
+ATDART % Target chooses the eligible legacy dungeon or raid with the lowest exact
+completion fraction. Tied minima are randomly selected once per capture and
+saved so browsing/reloading does not reroll the target. Version 0.1.2 excludes
+Dawn of the Infinite (instance 1209) from this target only. Its normal dungeon
+ranking/data remain present. Existing saved Dawn targets are replaced without
+rerolling unrelated targets or requiring deletion of the snapshot.
+
+Legacy Dungeons and Legacy Raids rank missing-count opportunities. Legacy stops
+at Dragonflight, excluding The War Within and Midnight; unknown expansions are
+not guessed to be legacy. These lists do not use the target's percentage sort.
+Unfinished Quests ranks zones by distinct visible, collectible uncollected quest
+IDs, excluding known capitals. Each section has its own expansion filter and
+collapse state. Hover rows/character selector for exact counts, timestamps and
+captured ATT profile context. Browse other characters with the selector; only
+the logged-in character can refresh its snapshot.
+
+Drag the title to move, resize at the bottom right, and use the shared scrollbar.
+Preferred size/position, collapse/filter state and minimap choices are retained.
+The compact dark window uses white labels/yellow numbers and content-fitting
+height. The ? tooltip provides a short usage reminder.
+
+WHAT DATA IS READ AND STORED
+The collector reads ATT's already-prepared main tree, character/profile context,
+visibility/collectibility/completion flags, canonical instance progress/totals,
+zone quest IDs, names, expansion/map/instance IDs and observation time. It retains
+its own per-character summarized opportunities and selected target, identity and
+UI preferences in FiammaCollectorDB. The Encounter Journal helps classify
+instances and its selected tier is restored afterward. Work uses timer batches.
+It does not modify ATT flags, filters, collection records or source tables, and
+does not bundle ATT code or its database.
+
+COUNTING AND INTERPRETATION
+Canonical instance totals come from outer entries in ATT's main Dungeons & Raids
+category. Alternate achievement/profession shortcuts and nested difficulty
+references do not override them. Conflicting canonical entries are omitted;
+an unavailable main category retains the prior snapshot and a loading message.
+Results follow ATT's profile and availability filters at capture. An account-wide
+profile may include rewards this character cannot obtain. Configure ATT before
+refreshing. Counts are opportunities, not drop probabilities, guaranteed rewards,
+number of runs or a promise of current accessibility.
+
+UPGRADES AND TROUBLESHOOTING
+Keep the FiammaCollector folder and FiammaCollectorDB names unchanged. Older
+0.1.0 instance snapshots require a fresh ATT-ready Refresh because their totals
+may come from the wrong reference group. Old quest snapshots are retained.
+No target: inspect ATT readiness, filters, legacy/expansion eligibility and the
+Dawn-only exclusion. ATT absent/loading is not proof of no missing collectibles.
+Stale alt: log into that character, prepare ATT and refresh. An offline snapshot
+cannot query another character's current collection state.
+
+RELEASE STATUS
+This bundle preserves the repository's newer 0.1.2 code rather than replacing it
+with an older installed 0.1.1 copy. Mock checks cover count repair, target
+selection and Dawn-only exclusion; actual Retail behavior still needs the normal
+client field check. The category/documentation update does not change ATT data.
+The existing GNU GPL v3 license is included. Nexus does not currently register
+this collector as an automatic sync source; local snapshots stay in this addon
+unless a separate, explicitly configured integration is added.
+
+INSTALLATION, UPDATING AND DATA SAFETY
+Version in this bundle: 0.1.2. Documentation prepared October 24, 2026.
+Client: WoW Retail preview; keep the TOC's existing Interface values. A declared
+interface is not proof every path has been tested on that patch. This package
+does not claim Forever/Classic compatibility. Category: DuckMoo Media.
+
+Exit WoW before installing/updating. Extract the single FiammaCollector folder into
+World of Warcraft/_retail_/Interface/AddOns/. Confirm FiammaCollector/FiammaCollector.toc
+is immediately inside AddOns, not inside another duplicate folder. Enable it in
+the AddOns screen for the characters you use, then log in. Follow any client
+out-of-date notice according to the actual patch; do not invent Interface values.
+
+The account-wide SavedVariable is FiammaCollectorDB. WoW normally writes it to
+_retail_/WTF/Account/<ACCOUNT>/SavedVariables/FiammaCollector.lua with a .lua.bak backup.
+The account/installation is the storage boundary; only observed characters are
+known. In-memory edits and captures persist on normal /reload or logout. A crash
+can lose changes since the last save. Back up the file while WoW is closed before
+manual maintenance. Updating addon files does not require deleting SavedVariables.
+Do not edit or restore them while the client is running: it can overwrite edits.
+Disable the addon to stop its collection/UI without deleting the saved database.
+Removing its AddOns folder alone does not erase the SavedVariables file.
+
+DATA LEAVING THE GAME
+Addon Lua does not make HTTP requests, send telemetry to a vendor or directly
+upload files. Nexus transfer, if configured for this addon, is a separate desktop
+process using independently managed credentials. Raw archives and normalized
+observations have separate retention. This ZIP contains source/runtime files,
+documentation and applicable license/notice only, never player databases or
+API/SSH credentials. Other addons' data and databases are not bundled.
+
+REPORTING A PROBLEM
+Include addon version, client build/locale, command/page, steps and exact error,
+plus whether the data was current or an offline snapshot. Inspect timestamps
+before treating missing data as zero. Share a minimal redacted sample only when
+needed; notes, names, character histories and credentials should stay private.
