@@ -145,3 +145,15 @@ Unavailable optional ATT text fields use a fallback ID. If Refresh still fails,
 type /atdart error and use Copy report, Ctrl+C. It includes the actual Lua error,
 versions, timestamp, character and tree context. Previous snapshots are retained;
 the old generic instruction to update ATT has been removed.
+
+
+QUEST OBJECT COUNTING (VERSION 0.1.5)
+ATT can put questID unlock flags on collectibles that are not quests. A reported
+Zaralek count of 18 included 15 mount customization unlocks and 3 actual quests.
+Collector now counts only ATT Quest objects, excluding hidden tracking quests.
+ATT's selected profile still controls eligibility; account mode can include
+race-restricted quests that this character cannot do. The character-only debug
+check explains that distinction without overriding the selected ATT profile.
+Debug reports include objectKey, mountmodID and hiddenTracking fields.
+After installing, restart WoW and Refresh the affected character. Older snapshots
+are preserved and labelled until refreshed.

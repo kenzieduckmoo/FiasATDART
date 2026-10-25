@@ -130,6 +130,7 @@ function F.Render()
     F.refresh.caption:SetText(F.attBusy and 'Reading...' or 'Refresh')
     local status=F.attMessage or message or (snapshot and (date('%b %d %I:%M %p',snapshot.seenAt)..' | '..M.Display(snapshot.mode))) or 'Open ATT, then Refresh to capture opportunities.'
     if snapshot and(snapshot.schema or 0)<4 then status='Older capture — Refresh to update ATT instance counts.'end
+    if snapshot and(snapshot.schema or 0)>=4 and(snapshot.schema or 0)<6 then status='Older quest count - Refresh to exclude non-quest tracking IDs.'end
     F.status:SetText(M.Plain(status))
     F.character:SetScript('OnEnter',nil);F.character:SetScript('OnLeave',nil)
     tooltip(F.character,c and (c.name or '?') or 'Character snapshot',{status,'Offline snapshots are retained. Select a recorded character here.'})

@@ -1,5 +1,5 @@
 local addon,F=...
-F.name=addon;F.version='0.1.4';F.Model={}
+F.name=addon;F.version='0.1.5';F.Model={}
 local M=F.Model
 function F.Safe(fn,...)
     if type(fn)~='function' then return nil end
@@ -13,6 +13,11 @@ local S=F.Safe
 -- ATT fields can be lazy getters which are temporarily unavailable while its
 -- GitHub build is preparing data. Optional diagnostic labels must not abort a scan.
 function F.ReadATT(node,key)return F.Safe(function()return node[key]end)end
+function F.IsATTQuest(node)
+    -- Mount customizations, rare kills and other ATT collectibles can carry
+    -- questID as a completion flag. Only the actual Quest class belongs here.
+    return F.ReadATT(node,'key')=='questID' and not F.ReadATT(node,'isHQT')
+end
 function F.ATTLabel(node)
     local value=F.ReadATT(node,'text') or F.ReadATT(node,'name')
     return type(value)=='string' and F.Model.Display(value) or nil

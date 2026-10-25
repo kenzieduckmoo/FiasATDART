@@ -20,6 +20,7 @@ function F.RecordQuestDebug(app,zone,node,status,path,reference,eligible,budget)
     budget.used=budget.used+1
     local checked=status=='counted' or status=='duplicate' or status=='excluded: group filter'
     local row={questID=node.questID,name=F.ATTLabel(node) or ('Quest '..node.questID),status=status,
+        objectKey=F.ReadATT(node,'key'),mountmodID=F.ReadATT(node,'mountmodID'),hiddenTracking=F.Clean(F.ReadATT(node,'isHQT')),
         collected=F.Clean(F.ReadATT(node,'collected')),collectible=F.Clean(F.ReadATT(node,'collectible')),visible=F.Clean(F.ReadATT(node,'visible')),
         saved=F.Clean(F.ReadATT(node,'saved')),groupFilter=checked and (eligible and 'pass' or 'fail') or 'not evaluated',
         path=path,reference=not not reference}
@@ -51,12 +52,14 @@ function F.QuestReport(character,snapshot,zone)
         'Collector count: '..text(zone.missing)..' distinct quest IDs | detailed debug: '..text(snapshot.questDebug),
         'ATT zone/quest windows use CURRENT filters; this report uses the SAVED capture.',
         'Only visited branches are listed. Invisible parent branches are not traversed.',
-        'Duplicate IDs count once. Parent/source filters are diagnostics, not a change to the counting rule.',
+        'Only actual ATT Quest objects count; mount unlock flags and hidden tracking quests do not. Duplicate IDs count once.',
+        'ATT profile filters decide eligibility; the separate current-character check is diagnostic only.',
         'A recursive-filter failure on a counted quest is a possible mismatch, not proof that the quest is obtainable.',
         ''}
     if not zone.questRows then lines[#lines+1]='This older snapshot has no quest details. Enable /atdart debug on, then Refresh on this character.' end
     for _,row in ipairs(zone.questRows or {})do
         lines[#lines+1]=text(row.status)..' | '..text(row.questID)..' | '..text(row.name)
+        lines[#lines+1]='  objectKey='..text(row.objectKey)..' mountmodID='..text(row.mountmodID)..' hiddenTracking='..text(row.hiddenTracking)
         lines[#lines+1]='  collected='..text(row.collected)..' collectible='..text(row.collectible)..' visible='..text(row.visible)..' saved='..text(row.saved)..' groupFilter='..text(row.groupFilter)..' reference='..text(row.reference)
         lines[#lines+1]='  recursiveFilter='..text(row.recursiveFilter)..' characterFilter='..text(row.characterFilter)..' characterComplete='..text(row.characterComplete)
         if snapshot.questDebug then lines[#lines+1]='  repeatable='..text(row.repeatable)..' daily='..text(row.daily)..' weekly='..text(row.weekly)..' unobtainable='..text(row.unobtainable)..' races='..text(row.races)..' classes='..text(row.classes)end

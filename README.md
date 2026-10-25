@@ -4,7 +4,7 @@ Custom version of the ATT tab from DuckMoo Services: Character Folio, made for F
 
 The installed addon folder remains **FiammaCollector** for compatibility with v0.1.0.
 
-**DuckMoo Services · v0.1.4 · By DuckMoo Media**
+**DuckMoo Services · v0.1.5 · By DuckMoo Media**
 
 A little collector cockpit made for Fiamma: black and charcoal surfaces, dark purple controls, white text, and yellow numbers. It contains the ATT functionality from Character Folio in a separate, compact addon.
 
@@ -19,7 +19,7 @@ Open ATT and allow its main list to prepare, then click **Refresh**. On a charac
 - **ATDART % Target:** The legacy dungeon or raid with the lowest exact completion fraction. Equal minima are picked randomly once per capture. The saved target survives browsing and reloads. This is the only percentage display.
 - **ATDART exclusion:** Dawn of the Infinite cannot be the ATDART target. It remains in the normal dungeon rankings and capture data. Existing saved Dawn targets are replaced automatically on display, including offline snapshots; other saved targets keep their current choice.
 - **Legacy Dungeons / Legacy Raids:** Highest missing-count opportunities first. Legacy stops at Dragonflight, excluding The War Within and Midnight. Unclassified instances are omitted rather than guessed.
-- **Unfinished Quests:** Zones ranked by distinct visible, collectible, uncollected quests. Capital cities are excluded. Expansion labels use ATT metadata and map ancestry.
+- **Unfinished Quests:** Zones ranked by distinct visible, collectible, uncollected ATT Quest objects. Non-quest collectibles that use quest IDs as unlock flags and hidden tracking quests are excluded. Capital cities are excluded. Expansion labels use ATT metadata and map ancestry.
 - **Section headers:** Click the left side to collapse or expand. Use the right side to filter that section independently by expansion. All matching snapshot rows remain accessible through the shared scrollbar.
 - **Hover a row:** Shows its expansion, exact missing count, and profile context. Hover the character selector for the full timestamp, active ATT profile, or loading message.
 - **Character selector:** Browse retained snapshots from characters who have logged in with this addon. Refresh is available for the logged-in character.
@@ -62,3 +62,8 @@ Normal captures retain counted quest details too. Old snapshots need a Refresh b
 ### Capture failure diagnostics (0.1.4)
 
 Fully exit and restart WoW after installing this version, particularly when upgrading from an older release without Debug.lua. Missing diagnostic modules now produce that restart instruction. Optional ATT text/diagnostic getters are read defensively: an unavailable name uses the quest ID rather than failing the collection capture. If capture still fails, the previous snapshot remains and `/atdart error` opens a copyable report with the real Lua error, ATT/addon versions, time, character and traversal context. The previous generic request to update ATT has been removed; a failed adapter read does not establish that ATT is outdated. These fixes cover reproduced failure cases, not a claim that the user's exact live failure has been identified.
+
+
+### Zaralek quest-count correction (0.1.5)
+
+The reported 18-versus-3 mismatch contained fifteen MountMod collectibles with `questID` unlock flags plus three actual Quest objects. The counter now requires ATT's primary object key to be `questID` and excludes hidden tracking quests (`isHQT`). It retains ATT's active profile eligibility: account-mode quests are not silently restricted by the separate character-only diagnostic filter. Debug rows now include the primary object key, mount customization ID and hidden-tracking flag. Refresh old character snapshots to recompute quest counts; retained older snapshots are labelled accordingly. The reconstructed report IDs reproduce 18-to-3 in Lua tests; live confirmation remains with the affected client.

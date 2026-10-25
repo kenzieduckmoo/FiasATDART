@@ -1,3 +1,9 @@
+# v0.1.5
+
+- Fix the reported Zaralek Cavern 18-versus-3 quest count. Fifteen mount customization collectibles carried questID unlock flags and were mistaken for quests. Require the actual ATT Quest object key; exclude hidden tracking quests.
+- Preserve active account-profile eligibility rather than forcing current-character-only restrictions. Include object classification in debug reports. Label older quest captures until refreshed.
+- Reproduce all 18 reported IDs in a focused Lua regression: 15 mount customizations excluded, 3 account-profile quests retained. Live affected-client confirmation remains pending.
+
 # v0.1.4
 
 - Protect optional ATT lazy text/diagnostic field reads; use quest IDs when names are unavailable.

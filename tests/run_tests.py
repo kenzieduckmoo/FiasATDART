@@ -133,8 +133,8 @@ local raid={instanceID=11,text='Legacy Raid',total=100,progress=20,visible=true}
 local root={modeString='Character mode',g={
  {tierID=2,headerID=100,g={dungeon}},
  {tierID=2,headerID=101,g={raid}},
- {mapID=107,g={{questID=1,collectible=true,visible=true},{questID=1,collectible=true,visible=true},{questID=2,collectible=true,collected=true}}},
- {tierID=1,mapID=84,g={{questID=3,collectible=true,visible=true}}},
+ {mapID=107,g={{key='questID',questID=1,collectible=true,visible=true},{key='questID',questID=1,collectible=true,visible=true},{key='questID',questID=2,collectible=true,collected=true}}},
+ {tierID=1,mapID=84,g={{key='questID',questID=3,collectible=true,visible=true}}},
  {tierID=11,headerID=101,g={{instanceID=12,text='War Within raid',total=10,progress=0,visible=true}}},
  {tierID=12,headerID=101,g={{instanceID=13,text='Midnight raid',total=10,progress=0,visible=true}}}
 }}
@@ -208,7 +208,7 @@ local function capture()
  F.RefreshCurrent();return F.db.characters[F.current].att
 end
 local snapshot=capture()
-assert(snapshot.schema==5 and #snapshot.completion==1)
+assert(snapshot.schema==6 and #snapshot.completion==1)
 assert(snapshot.atdart.progress==294 and snapshot.atdart.total==303)
 assert(snapshot.raids[1].missing==9 and string.format('%.2f',100*snapshot.atdart.progress/snapshot.atdart.total)=='97.03')
 F.Render();assert(F.pool[1].number:GetText()=='97.03%','Native target label disagrees with main ATT counts')
@@ -264,11 +264,11 @@ print('PASS: Dawn excluded only from ATDART; general rankings retained, localize
 lua.execute(r'''
 F.Current();F.selected=F.current;F.db.settings.filters={};F.db.settings.collapsed={}
 local zone={mapID=107,text='Nagrand',g={}}
-for id=1,18 do zone.g[#zone.g+1]={questID=id,text='Quest '..id,visible=true,collectible=true,parent=zone,filteredParent=id>3}end
-zone.g[#zone.g+1]={questID=1,text='Duplicate',visible=true,collectible=true,parent=zone}
-zone.g[#zone.g+1]={questID=19,text='Collected',collected=true,collectible=true,parent=zone}
-zone.g[#zone.g+1]={questID=20,text='Hidden',visible=false,collectible=true,parent=zone}
-zone.g[#zone.g+1]={questID=21,text='Filtered',visible=true,collectible=true,filtered=true,parent=zone}
+for id=1,18 do zone.g[#zone.g+1]={key='questID',questID=id,text='Quest '..id,visible=true,collectible=true,parent=zone,filteredParent=id>3}end
+zone.g[#zone.g+1]={key='questID',questID=1,text='Duplicate',visible=true,collectible=true,parent=zone}
+zone.g[#zone.g+1]={key='questID',questID=19,text='Collected',collected=true,collectible=true,parent=zone}
+zone.g[#zone.g+1]={key='questID',questID=20,text='Hidden',visible=false,collectible=true,parent=zone}
+zone.g[#zone.g+1]={key='questID',questID=21,text='Filtered',visible=true,collectible=true,filtered=true,parent=zone}
 local openedZone,openedQuest
 AllTheThings={HeaderConstants={DUNGEONS_AND_RAIDS=102},Windows={Prime={data={modeString='Character mode',g={{headerID=102,g={}},zone}}}},
  GroupFilter=function(n)if not n.filtered then return true end end,RecursiveGroupRequirementsFilter=function(n)return not n.filteredParent end,
@@ -295,12 +295,12 @@ SlashCmdList.FIAMMACOLLECTOR('quest 5');assert(openedQuest=='questID:5')
 local prior=snapshot;AllTheThings=nil;F.ShowQuestDebug(z,c,prior);assert(F.questDebugFrame.edit:GetText()==report,'Offline report needs live ATT')
 assert(not F.OpenATTZone(107) and not F.OpenATTQuest(5))
 SlashCmdList.FIAMMACOLLECTOR('debug off');assert(not F.db.settings.questDebug and prior.questDebug,'Debug toggle rewrote saved evidence')
-local limited={questRows={}};F.RecordQuestDebug({},limited,{questID=1},'counted','test',false,true,{used=8000})
+local limited={questRows={}};F.RecordQuestDebug({},limited,{key='questID',questID=1},'counted','test',false,true,{used=8000})
 assert(limited.debugTruncated==1 and #limited.questRows==0)
 print('PASS: 18 versus 3 filter mismatch evidence, counted/excluded/duplicate IDs, copyable report, read-only native ATT actions, offline evidence, bounded capture and frame reuse')
 ''')
 lua.execute(r'''
-local quest=setmetatable({questID=777,collectible=true,visible=true},{__index=function(_,key)
+local quest=setmetatable({key='questID',questID=777,collectible=true,visible=true},{__index=function(_,key)
  if key=='text' or key=='name' or key=='saved' or key=='u'then error('ATT lazy field not ready: '..key)end
 end})
 local zone={mapID=107,g={quest}}
@@ -319,5 +319,30 @@ SlashCmdList.FIAMMACOLLECTOR('error')
 assert(F.questDebugFrame.edit:GetText():find('Synthetic ATT tree failure') and not F.questDebugFrame.openZone:IsEnabled())
 assert(F.questDebugFrame.edit:GetText():find('Previous collection snapshot was retained'))
 print('PASS: unavailable ATT lazy fields, missing hot-update module, retained prior snapshot and copyable actual capture failure')
+''')
+lua.execute(r'''
+-- Reconstructed from the reported Zaralek Cavern discrepancy. The fifteen
+-- extra IDs belong to ATT MountMod items, not to its Quest class.
+local mounts={{73801,203313},{73829,203338},{73809,203321},{73830,203339},{69221,197021},
+ {75743,205341},{73850,203358},{73816,203328},{73824,203334},{73855,203363},{69565,197364},
+ {73795,203307},{73853,203361},{69305,197104},{69178,196978}}
+local zone={mapID=2133,text='Zaralek Cavern',g={}}
+for _,pair in ipairs(mounts)do zone.g[#zone.g+1]={key='mountmodID',mountmodID=pair[2],questID=pair[1],collectible=true,visible=true}end
+for _,id in ipairs({73085,73081,73077})do zone.g[#zone.g+1]={key='questID',questID=id,collectible=true,visible=true,races={52,70}}end
+AllTheThings={HeaderConstants={DUNGEONS_AND_RAIDS=102},Windows={Prime={data={modeString='Insane Account Completionist Mode',g={{headerID=102,g={}},zone}}}},
+ GroupFilter=function()return true end,Modules={Filter={Filters={RecursiveCharacterRequirementsFilter=function(n)return not n.races end}}}}
+F.db.settings.questDebug=true;F.RefreshCurrent();local snapshot=F.db.characters[F.current].att;local z=snapshot.zones[1]
+assert(z.missing==3 and #z.questRows==18 and snapshot.schema==6)
+local excluded,counted=0,0
+for _,row in ipairs(z.questRows)do
+ if row.status=='counted'then counted=counted+1;assert(row.objectKey=='questID' and row.characterFilter=='fail','Account mode was replaced by character-only filtering')end
+ if row.status=='excluded: not a quest object'then excluded=excluded+1;assert(row.objectKey=='mountmodID' and row.mountmodID)end
+end
+assert(counted==3 and excluded==15)
+assert(not F.IsATTQuest({key='questID',questID=1,isHQT=true}) and not F.IsATTQuest({key='npcID',questID=1}))
+assert(F.IsATTQuest({key='questID',questID=1}))
+local report=F.QuestReport(F.db.characters[F.current],snapshot,z)
+assert(report:find('objectKey=mountmodID') and report:find('Collector count: 3'))
+print('PASS: actual Zaralek 18-to-3 regression; mount customization flags excluded, account-profile race-restricted quests retained, hidden tracking and non-quest objects excluded')
 ''')
 

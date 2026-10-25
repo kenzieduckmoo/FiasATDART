@@ -157,7 +157,8 @@ function F.RefreshATT()
                     end
                     if zone and n.questID then
                         local z=zones[zone];local eligible;local status
-                        if n.collected then status='excluded: collected'
+                        if not F.IsATTQuest(n)then status='excluded: not a quest object'
+                        elseif n.collected then status='excluded: collected'
                         elseif n.visible==false then status='excluded: hidden'
                         elseif not n.collectible then status='excluded: not collectible'
                         else
@@ -181,7 +182,7 @@ function F.RefreshATT()
             print('Fia capture error: '..c.captureError.message);F.DrawIfShown();return
         end
         if #stack>0 then C_Timer.After(.01,step);return end
-        local result={schema=5,seenAt=F.Now(),mode=F.Clean(root.modeString) or 'ATT active profile',attVersion=F.Safe(C_AddOns and C_AddOns.GetAddOnMetadata,'AllTheThings','Version'),questDebug=questDebug.enabled,dungeons={},raids={},zones={},completion={},instanceSource=instanceRoot and'main Dungeons & Raids'or'unavailable',ambiguousInstances=0}
+        local result={schema=6,seenAt=F.Now(),mode=F.Clean(root.modeString) or 'ATT active profile',attVersion=F.Safe(C_AddOns and C_AddOns.GetAddOnMetadata,'AllTheThings','Version'),questDebug=questDebug.enabled,dungeons={},raids={},zones={},completion={},instanceSource=instanceRoot and'main Dungeons & Raids'or'unavailable',ambiguousInstances=0}
         for key,r in pairs(instances) do
             if ambiguous[key]then result.ambiguousInstances=result.ambiguousInstances+1
             else
