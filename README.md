@@ -4,7 +4,7 @@ Custom version of the ATT tab from DuckMoo Services: Character Folio, made for F
 
 The installed addon folder remains **FiammaCollector** for compatibility with v0.1.0.
 
-**DuckMoo Services · v0.1.3 · By DuckMoo Media**
+**DuckMoo Services · v0.1.4 · By DuckMoo Media**
 
 A little collector cockpit made for Fiamma: black and charcoal surfaces, dark purple controls, white text, and yellow numbers. It contains the ATT functionality from Character Folio in a separate, compact addon.
 
@@ -57,3 +57,8 @@ Future source updates for this addon belong in [kenzieduckmoo/FiasATDART](https:
 5. Click **Copy report**, then press Ctrl+C and send the text for comparison. `/atdart debug off` stops extra diagnostic capture; saved reports remain until that character's next refresh.
 
 Normal captures retain counted quest details too. Old snapshots need a Refresh before they have details. Reports are saved observations; ATT windows use current data/settings and may differ after changes. Deep capture visits only the same branches as the existing counter and does not traverse invisible parent branches. Distinct IDs count once. Diagnostics are bounded at 500 rows per zone and 8,000 per capture, with explicit truncation notices; the count itself is not capped. Parent filter failures are evidence to investigate, not proof that every counted quest is obtainable. The counting policy is unchanged in this diagnostic release. Native ATT actions are based on the inspected installed ATT interfaces; Fia's exact ATT version/client still needs a live check.
+
+
+### Capture failure diagnostics (0.1.4)
+
+Fully exit and restart WoW after installing this version, particularly when upgrading from an older release without Debug.lua. Missing diagnostic modules now produce that restart instruction. Optional ATT text/diagnostic getters are read defensively: an unavailable name uses the quest ID rather than failing the collection capture. If capture still fails, the previous snapshot remains and `/atdart error` opens a copyable report with the real Lua error, ATT/addon versions, time, character and traversal context. The previous generic request to update ATT has been removed; a failed adapter read does not establish that ATT is outdated. These fixes cover reproduced failure cases, not a claim that the user's exact live failure has been identified.

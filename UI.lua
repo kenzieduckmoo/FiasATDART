@@ -164,7 +164,7 @@ function F.Render()
                 local r=row(y,22);r.name:SetText(M.Plain(M.Display(entry.name)));r.number:SetText(tostring(entry.missing))
                 tooltip(r,M.Display(entry.name),{F.ATTExpansionLabel(entry,key=='zones'),entry.missing..(key=='zones' and ' unfinished quests' or ' missing collectibles'),'Counts follow the ATT profile saved at capture.'});y=y+22
                 if key=='zones'then
-                    r:SetScript('OnMouseUp',function(_,mouse)if mouse=='LeftButton'then F.ShowQuestDebug(entry,c,snapshot)end end)
+                    r:SetScript('OnMouseUp',function(_,mouse)if mouse=='LeftButton'and F.DebugReady()then F.ShowQuestDebug(entry,c,snapshot)end end)
                     tooltip(r,M.Display(entry.name),{entry.missing..' unfinished quests','Click for the exact counted IDs and a copyable report.','Use /atdart debug on, then Refresh, for excluded entries and filter diagnostics.'})
                 end
             end

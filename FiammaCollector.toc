@@ -2,7 +2,7 @@
 ## Title: Fiamma's Collector | DuckMoo Services
 ## Notes: A compact ATT companion made for Fiamma. Legacy rankings, quest zones, and ATDART targets.
 ## Author: DuckMoo Media
-## Version: 0.1.3
+## Version: 0.1.4
 ## SavedVariables: FiammaCollectorDB
 ## OptionalDeps: AllTheThings
 ## Category: DuckMoo Media

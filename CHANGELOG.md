@@ -1,3 +1,10 @@
+# v0.1.4
+
+- Protect optional ATT lazy text/diagnostic field reads; use quest IDs when names are unavailable.
+- Detect a missing diagnostic module after an in-game update and instruct a full WoW restart.
+- Replace the misleading generic Update ATT message with preserved failure context and `/atdart error` copyable reports. Preserve prior snapshots on actual capture failure.
+- Reproduce these cases in Lua 5.1 tests; exact user-client failure remains subject to live verification.
+
 # v0.1.3
 
 - Add clickable zone quest reports with counted IDs/names, copyable text and a native ATT zone window. Add `/atdart quests` and `/atdart quest ID`.

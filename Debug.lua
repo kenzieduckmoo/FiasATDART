@@ -19,21 +19,30 @@ function F.RecordQuestDebug(app,zone,node,status,path,reference,eligible,budget)
     if #zone.questRows>=500 or budget.used>=8000 then zone.debugTruncated=(zone.debugTruncated or 0)+1;return end
     budget.used=budget.used+1
     local checked=status=='counted' or status=='duplicate' or status=='excluded: group filter'
-    local row={questID=node.questID,name=text(node.text or node.name or ('Quest '..node.questID)),status=status,
-        collected=F.Clean(node.collected),collectible=F.Clean(node.collectible),visible=F.Clean(node.visible),
-        saved=F.Clean(node.saved),groupFilter=checked and (eligible and 'pass' or 'fail') or 'not evaluated',
+    local row={questID=node.questID,name=F.ATTLabel(node) or ('Quest '..node.questID),status=status,
+        collected=F.Clean(F.ReadATT(node,'collected')),collectible=F.Clean(F.ReadATT(node,'collectible')),visible=F.Clean(F.ReadATT(node,'visible')),
+        saved=F.Clean(F.ReadATT(node,'saved')),groupFilter=checked and (eligible and 'pass' or 'fail') or 'not evaluated',
         path=path,reference=not not reference}
     if budget.enabled then
         row.recursiveFilter=filter(app.RecursiveGroupRequirementsFilter,node)
         local filters=app.Modules and app.Modules.Filter and app.Modules.Filter.Filters or {}
         row.characterFilter=filter(filters.RecursiveCharacterRequirementsFilter,node)
         row.characterComplete=F.Safe(C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted,node.questID)
-        row.repeatable=F.Clean(node.repeatable);row.daily=F.Clean(node.isDaily);row.weekly=F.Clean(node.isWeekly)
-        row.unobtainable=F.Clean(node.u);row.races=F.Clean(node.races);row.classes=F.Clean(node.classes)
+        row.repeatable=F.Clean(F.ReadATT(node,'repeatable'));row.daily=F.Clean(F.ReadATT(node,'isDaily'));row.weekly=F.Clean(F.ReadATT(node,'isWeekly'))
+        row.unobtainable=F.Clean(F.ReadATT(node,'u'));row.races=F.Clean(F.ReadATT(node,'races'));row.classes=F.Clean(F.ReadATT(node,'classes'))
     end
     zone.questRows[#zone.questRows+1]=row
 end
 function F.QuestReport(character,snapshot,zone)
+    if zone.captureError then
+        local e=zone.captureError;local context=e.context or {}
+        return table.concat({"Fia's Collector capture failure | addon "..text(e.addonVersion),
+            'Character: '..text(character.name)..'-'..text(character.realm),
+            'Failed at: '..date('%Y-%m-%d %H:%M:%S',e.seenAt)..' local | ATT '..text(e.attVersion),
+            'Previous collection snapshot was retained. This does not establish that ATT is outdated.',
+            'Stage: '..text(context.stage)..' | node '..text(context.visited)..' | questID '..text(context.questID)..' | instanceID '..text(context.instanceID),
+            'ATT path: '..text(context.path),'','Error: '..text(e.message)},'\n')
+    end
     local lines={"Fia's Collector quest diagnostic | addon "..F.version,
         'Character: '..text(character.name)..'-'..text(character.realm),
         'Zone: '..text(zone.name)..' | mapID '..text(zone.mapID),
@@ -83,7 +92,7 @@ function F.ShowQuestDebug(zone,character,snapshot)
             local b=CreateFrame('Button',nil,panel,'UIPanelButtonTemplate');b:SetSize(width,23);b:SetPoint('TOPRIGHT',x,-7);b:SetText(caption);b:SetScript('OnClick',callback);return b
         end
         button('X',-7,24,function()panel:Hide()end)
-        button('Open zone in ATT',-37,145,function()if not F.OpenATTZone(panel.mapID)then panel.hint:SetText('ATT zone window unavailable, or you are in combat. The report is still available.')end end)
+        panel.openZone=button('Open zone in ATT',-37,145,function()if not panel.mapID or not F.OpenATTZone(panel.mapID)then panel.hint:SetText('ATT zone window unavailable, or you are in combat. The report is still available.')end end)
         button('Copy report',-188,105,function()panel.edit:SetFocus();panel.edit:HighlightText()end)
         local scroll=CreateFrame('ScrollFrame',nil,panel,'UIPanelScrollFrameTemplate');panel.scroll=scroll;scroll:SetPoint('TOPLEFT',12,-42);scroll:SetPoint('BOTTOMRIGHT',-30,35)
         local edit=CreateFrame('EditBox',nil,scroll);panel.edit=edit;edit:SetMultiLine(true);edit:SetAutoFocus(false);edit:SetFontObject('GameFontHighlightSmall');edit:SetTextColor(1,1,1);edit:SetWidth(604);scroll:SetScrollChild(edit)
@@ -92,8 +101,14 @@ function F.ShowQuestDebug(zone,character,snapshot)
         panel.hint=panel:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');panel.hint:SetPoint('BOTTOMLEFT',12,12);panel.hint:SetWidth(630);panel.hint:SetJustifyH('LEFT');panel.hint:SetTextColor(1,.87,.32)
     end
     local report=F.QuestReport(character,snapshot,zone);panel.mapID=zone.mapID;panel.edit.report=report;panel.edit:SetText(report)
+    panel.openZone:SetEnabled(zone.mapID~=nil)
     local _,lines=report:gsub('\n','\n');panel.edit:SetHeight(math.max(390,(lines+2)*15));panel.scroll:SetVerticalScroll(0)
     panel.hint:SetText('For deeper capture: /atdart debug on, then Refresh. Copy report selects text; press Ctrl+C.');panel:Show()
+end
+function F.ShowCaptureError()
+    local c=F.db.characters[F.current];local err=c and c.captureError
+    if not err then print('Fia: No capture failure recorded by this version. Click Refresh to retry.');return end
+    F.ShowQuestDebug({captureError=err},c,c.att or {})
 end
 function F.ChooseQuestDebug(query)
     local c=F.db.characters[F.selected or F.current];local snapshot=c and c.att

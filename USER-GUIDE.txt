@@ -136,3 +136,12 @@ The release adds evidence rather than assuming the reason for an 18-versus-3
 mismatch. A recursive-filter failure highlights something to compare in ATT.
 Reports describe the saved capture; ATT windows describe current filters/data.
 Actual behavior in Fia's installed ATT version still needs her in-game check.
+
+
+CAPTURE FAILURES (VERSION 0.1.4)
+Fully exit and restart WoW after installation so new Lua files are loaded.
+A missing debug module now asks for a restart instead of blaming ATT's version.
+Unavailable optional ATT text fields use a fallback ID. If Refresh still fails,
+type /atdart error and use Copy report, Ctrl+C. It includes the actual Lua error,
+versions, timestamp, character and tree context. Previous snapshots are retained;
+the old generic instruction to update ATT has been removed.

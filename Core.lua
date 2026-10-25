@@ -1,5 +1,5 @@
 local addon,F=...
-F.name=addon;F.version='0.1.3';F.Model={}
+F.name=addon;F.version='0.1.4';F.Model={}
 local M=F.Model
 function F.Safe(fn,...)
     if type(fn)~='function' then return nil end
@@ -10,6 +10,18 @@ function F.Safe(fn,...)
     return unpack(results,2,results.n)
 end
 local S=F.Safe
+-- ATT fields can be lazy getters which are temporarily unavailable while its
+-- GitHub build is preparing data. Optional diagnostic labels must not abort a scan.
+function F.ReadATT(node,key)return F.Safe(function()return node[key]end)end
+function F.ATTLabel(node)
+    local value=F.ReadATT(node,'text') or F.ReadATT(node,'name')
+    return type(value)=='string' and F.Model.Display(value) or nil
+end
+function F.DebugReady()
+    if type(F.RecordQuestDebug)=='function' and type(F.ShowQuestDebug)=='function'then return true end
+    F.attMessage='Quest diagnostics are not loaded. Fully exit WoW and reopen it to load the new addon files.'
+    print('Fia: '..F.attMessage);F.DrawIfShown();return false
+end
 function F.Clean(value,depth)
     if issecretvalue and issecretvalue(value) then return nil end
     local kind=type(value)
@@ -67,9 +79,10 @@ SlashCmdList.FIAMMACOLLECTOR=function(command)
         F.db.settings.questDebug=value=='on' or value~='off' and not F.db.settings.questDebug
         print('Fia quest debug '..(F.db.settings.questDebug and 'ON' or 'OFF')..'. Refresh this character, then click an Unfinished Quests zone.')
         F.DrawIfShown()
-    elseif command=='quests' or command:match('^quests%s')then F.Show();F.ChooseQuestDebug(command:match('^quests%s+(.+)$'))
+    elseif command=='error'then if F.DebugReady()then F.ShowCaptureError()end
+    elseif command=='quests' or command:match('^quests%s')then if F.DebugReady()then F.Show();F.ChooseQuestDebug(command:match('^quests%s+(.+)$'))end
     elseif command:match('^quest%s')then
-        if not F.OpenATTQuest(command:match('^quest%s+(%d+)$'))then print('Fia: ATT quest window unavailable. Use /atdart quest followed by a quest ID, outside combat.')end
+        if F.DebugReady() and not F.OpenATTQuest(command:match('^quest%s+(%d+)$'))then print('Fia: ATT quest window unavailable. Use /atdart quest followed by a quest ID, outside combat.')end
     else F.Show()end
 end
 

@@ -76,6 +76,7 @@ function F.ATTStatus()
 end
 function F.RefreshATT()
     if F.Safe(InCombatLockdown)then F.attMessage='Refresh after combat.';F.DrawIfShown();return end
+    if not F.DebugReady()then return end
     local app,message,root=F.ATTStatus()
     if not app then F.attMessage=message;F.DrawIfShown();return end
     if F.attBusy then return end
@@ -94,6 +95,7 @@ function F.RefreshATT()
     end
     local stack={{node=root}};local visited={};local canonicalVisited={};local instances={};local ambiguous={};local zones={};local count=0
     local questDebug={enabled=not not F.db.settings.questDebug,used=0}
+    local context={stage='starting capture'}
     local journalKinds={};local journalTiers={}
     -- Encounter Journal IDs match ATT instanceID. Restore the user's tier.
     local selected=F.Safe(EJ_GetCurrentTier)
@@ -116,6 +118,7 @@ function F.RefreshATT()
             local budget=0
             while #stack>0 and budget<350 do
                 local frame=table.remove(stack);local n=frame.node
+                context={stage='reading ATT node',visited=count+1,mapID=frame.zone,path=frame.path}
                 budget=budget+1;count=count+1
                 if type(n)=='table' then
                     local inInstances=frame.inInstances or n==instanceRoot
@@ -124,8 +127,10 @@ function F.RefreshATT()
                     if not seen[n]then
                     seen[n]=true
                     local kind=frame.kind;local tier=F.ATTNodeTier(n,frame.tier)
-                    local part=F.Model.Display(F.Clean(n.text or n.name) or (n.mapID and 'mapID '..n.mapID) or (n.headerID and 'headerID '..n.headerID) or (n.questID and 'questID '..n.questID) or 'group')
+                    context.questID=F.ReadATT(n,'questID');context.instanceID=F.ReadATT(n,'instanceID')
+                    local part=F.ATTLabel(n) or (n.mapID and 'mapID '..n.mapID) or (n.headerID and 'headerID '..n.headerID) or (context.questID and 'questID '..context.questID) or 'group'
                     local path=((frame.path and frame.path..' > ' or '')..part):sub(-900)
+                    context.path=path
                     if H.RAIDS and n.headerID==H.RAIDS then kind='raid' end
                     if H.DUNGEONS and n.headerID==H.DUNGEONS then kind='dungeon' end
                     local zone=frame.zone
@@ -161,7 +166,7 @@ function F.RefreshATT()
                             elseif z and z.quests[n.questID]then status='duplicate'
                             else status='counted';if z then z.quests[n.questID]=true;z.missing=z.missing+1 end end
                         end
-                        if z then F.RecordQuestDebug(app,z,n,status,path,reference,eligible,questDebug)end
+                        if z then context.stage='recording quest diagnostics';F.RecordQuestDebug(app,z,n,status,path,reference,eligible,questDebug)end
                     end
                     if n.visible~=false then
                         for _,child in ipairs(n.g or {}) do stack[#stack+1]={node=child,kind=kind,tier=tier,zone=zone,path=path,inInstances=inInstances,reference=reference,instanceParent=frame.instanceParent or n.instanceID} end
@@ -171,7 +176,9 @@ function F.RefreshATT()
             end
         end)
         if not ok then
-            F.attBusy=false;F.attMessage='ATT data could not be read by this version of the adapter. Update ATT and try Refresh. No collection data was changed.';F.DrawIfShown();return
+            c.captureError={seenAt=F.Now(),addonVersion=F.version,attVersion=F.Safe(C_AddOns and C_AddOns.GetAddOnMetadata,'AllTheThings','Version'),message=tostring(err):sub(1,2000),context=F.Clean(context)}
+            F.attBusy=false;F.attMessage='Collector capture failed; previous snapshot retained. /atdart error shows the actual error.'
+            print('Fia capture error: '..c.captureError.message);F.DrawIfShown();return
         end
         if #stack>0 then C_Timer.After(.01,step);return end
         local result={schema=5,seenAt=F.Now(),mode=F.Clean(root.modeString) or 'ATT active profile',attVersion=F.Safe(C_AddOns and C_AddOns.GetAddOnMetadata,'AllTheThings','Version'),questDebug=questDebug.enabled,dungeons={},raids={},zones={},completion={},instanceSource=instanceRoot and'main Dungeons & Raids'or'unavailable',ambiguousInstances=0}

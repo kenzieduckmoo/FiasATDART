@@ -299,4 +299,25 @@ local limited={questRows={}};F.RecordQuestDebug({},limited,{questID=1},'counted'
 assert(limited.debugTruncated==1 and #limited.questRows==0)
 print('PASS: 18 versus 3 filter mismatch evidence, counted/excluded/duplicate IDs, copyable report, read-only native ATT actions, offline evidence, bounded capture and frame reuse')
 ''')
+lua.execute(r'''
+local quest=setmetatable({questID=777,collectible=true,visible=true},{__index=function(_,key)
+ if key=='text' or key=='name' or key=='saved' or key=='u'then error('ATT lazy field not ready: '..key)end
+end})
+local zone={mapID=107,g={quest}}
+AllTheThings={HeaderConstants={DUNGEONS_AND_RAIDS=102},Windows={Prime={data={g={{headerID=102,g={}},zone}}}}}
+F.db.settings.questDebug=true;F.RefreshCurrent()
+local c=F.db.characters[F.current];local good=c.att
+assert(not F.attMessage and good.zones[1].missing==1 and good.zones[1].questRows[1].name=='Quest 777','Optional ATT lazy getter aborted capture')
+local record=F.RecordQuestDebug;F.RecordQuestDebug=nil;F.RefreshCurrent()
+assert(c.att==good and F.attMessage:find('Fully exit WoW'),'Missing new Lua module was misreported as outdated ATT')
+F.RecordQuestDebug=record
+local failing=setmetatable({mapID=107},{__index=function(_,key)if key=='g'then error('Synthetic ATT tree failure')end end})
+AllTheThings.Windows.Prime.data.g[2]=failing;F.RefreshCurrent()
+assert(c.att==good and c.captureError.message:find('Synthetic ATT tree failure') and not F.attBusy)
+assert(F.attMessage:find('/atdart error') and not F.attMessage:find('Update ATT'))
+SlashCmdList.FIAMMACOLLECTOR('error')
+assert(F.questDebugFrame.edit:GetText():find('Synthetic ATT tree failure') and not F.questDebugFrame.openZone:IsEnabled())
+assert(F.questDebugFrame.edit:GetText():find('Previous collection snapshot was retained'))
+print('PASS: unavailable ATT lazy fields, missing hot-update module, retained prior snapshot and copyable actual capture failure')
+''')
 
