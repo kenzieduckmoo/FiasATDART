@@ -116,7 +116,7 @@ function methods:ClearFocus() self.focus=false end
 function methods:SetText(text) self.text=text;if self.scripts.OnTextChanged then self.scripts.OnTextChanged(self,false)end end
 Minimap=CreateFrame('Frame');Minimap:SetSize(140,140)
 ''')
-for filename in ['Core.lua','ATT.lua','UI.lua','Minimap.lua']:
+for filename in ['Core.lua','ATT.lua','Debug.lua','UI.lua','Minimap.lua']:
     lua.execute("assert(loadfile(...))('FiammaCollector',F)",str(ROOT/filename))
 lua.execute(r'''
 F.Init();F.Current()
@@ -208,7 +208,7 @@ local function capture()
  F.RefreshCurrent();return F.db.characters[F.current].att
 end
 local snapshot=capture()
-assert(snapshot.schema==4 and #snapshot.completion==1)
+assert(snapshot.schema==5 and #snapshot.completion==1)
 assert(snapshot.atdart.progress==294 and snapshot.atdart.total==303)
 assert(snapshot.raids[1].missing==9 and string.format('%.2f',100*snapshot.atdart.progress/snapshot.atdart.total)=='97.03')
 F.Render();assert(F.pool[1].number:GetText()=='97.03%','Native target label disagrees with main ATT counts')
@@ -261,3 +261,42 @@ assert(#captured.dungeons==2 and #captured.completion==2 and captured.atdart.ins
 assert(dawn.progress==0 and dawn.total==100,'Read-only ATT data changed')
 print('PASS: Dawn excluded only from ATDART; general rankings retained, localized IDs, cached/offline repair, unaffected target stability and Dawn-only snapshots')
 ''')
+lua.execute(r'''
+F.Current();F.selected=F.current;F.db.settings.filters={};F.db.settings.collapsed={}
+local zone={mapID=107,text='Nagrand',g={}}
+for id=1,18 do zone.g[#zone.g+1]={questID=id,text='Quest '..id,visible=true,collectible=true,parent=zone,filteredParent=id>3}end
+zone.g[#zone.g+1]={questID=1,text='Duplicate',visible=true,collectible=true,parent=zone}
+zone.g[#zone.g+1]={questID=19,text='Collected',collected=true,collectible=true,parent=zone}
+zone.g[#zone.g+1]={questID=20,text='Hidden',visible=false,collectible=true,parent=zone}
+zone.g[#zone.g+1]={questID=21,text='Filtered',visible=true,collectible=true,filtered=true,parent=zone}
+local openedZone,openedQuest
+AllTheThings={HeaderConstants={DUNGEONS_AND_RAIDS=102},Windows={Prime={data={modeString='Character mode',g={{headerID=102,g={}},zone}}}},
+ GroupFilter=function(n)if not n.filtered then return true end end,RecursiveGroupRequirementsFilter=function(n)return not n.filteredParent end,
+ ToggleMiniListForCurrentZone=function(id)openedZone=id end,CreatePopoutForSearch=function(search)openedQuest=search;return true end}
+C_QuestLog={IsQuestFlaggedCompleted=function(id)return id==5 end}
+SlashCmdList.FIAMMACOLLECTOR('debug on');assert(F.db.settings.questDebug)
+F.RefreshCurrent();local c=F.db.characters[F.current];local snapshot=c.att;local z=snapshot.zones[1]
+assert(z.missing==18 and #z.questRows==22,'Debug changed counts or omitted visited candidates')
+local counted,recursiveFailures,duplicates=0,0,0
+for _,r in ipairs(z.questRows)do
+ if r.status=='counted'then counted=counted+1;if r.recursiveFilter=='fail'then recursiveFailures=recursiveFailures+1 end end
+ if r.status=='duplicate'then duplicates=duplicates+1 end
+ if r.questID==21 then assert(r.groupFilter=='fail','ATT nil-return filter was not recorded as a failed check')end
+end
+assert(counted==18 and recursiveFailures==15 and duplicates==1)
+local report=F.QuestReport(c,snapshot,z)
+assert(report:find('Collector count: 18') and report:find('recursiveFilter=fail') and report:find('characterComplete=true') and report:find('ATT path:'))
+F.Render();local clicked=false
+for _,row in ipairs(F.pool)do if row:IsShown() and row.name:GetText()=='Nagrand'then row:GetScript('OnMouseUp')(row,'LeftButton');clicked=true;break end end
+assert(clicked and F.questDebugFrame:IsShown() and F.questDebugFrame.edit:GetText()==report)
+local frames=frameCount;F.ShowQuestDebug(z,c,snapshot);assert(frameCount==frames,'Diagnostic frames were not reused')
+assert(F.OpenATTZone(107) and openedZone==107)
+SlashCmdList.FIAMMACOLLECTOR('quest 5');assert(openedQuest=='questID:5')
+local prior=snapshot;AllTheThings=nil;F.ShowQuestDebug(z,c,prior);assert(F.questDebugFrame.edit:GetText()==report,'Offline report needs live ATT')
+assert(not F.OpenATTZone(107) and not F.OpenATTQuest(5))
+SlashCmdList.FIAMMACOLLECTOR('debug off');assert(not F.db.settings.questDebug and prior.questDebug,'Debug toggle rewrote saved evidence')
+local limited={questRows={}};F.RecordQuestDebug({},limited,{questID=1},'counted','test',false,true,{used=8000})
+assert(limited.debugTruncated==1 and #limited.questRows==0)
+print('PASS: 18 versus 3 filter mismatch evidence, counted/excluded/duplicate IDs, copyable report, read-only native ATT actions, offline evidence, bounded capture and frame reuse')
+''')
+

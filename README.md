@@ -4,7 +4,7 @@ Custom version of the ATT tab from DuckMoo Services: Character Folio, made for F
 
 The installed addon folder remains **FiammaCollector** for compatibility with v0.1.0.
 
-**DuckMoo Services · v0.1.2 · By DuckMoo Media**
+**DuckMoo Services · v0.1.3 · By DuckMoo Media**
 
 A little collector cockpit made for Fiamma: black and charcoal surfaces, dark purple controls, white text, and yellow numbers. It contains the ATT functionality from Character Folio in a separate, compact addon.
 
@@ -45,3 +45,15 @@ The ATT adapter is derived from DuckMoo Services: Character Folio v0.3.0. This a
 GNU GPL v3. Copyright 2026 DuckMoo Media. See LICENSE.
 
 Future source updates for this addon belong in [kenzieduckmoo/FiasATDART](https://github.com/kenzieduckmoo/FiasATDART).
+
+
+
+## Investigating a quest count mismatch (0.1.3)
+
+1. Enable `/atdart debug on`. Open ATT and let its main tree finish updating, then click Collector **Refresh** on the affected character.
+2. Click the affected zone under **Unfinished Quests**, or use `/atdart quests` to choose it. `/atdart quests 107` also accepts a map ID; a full zone name works too.
+3. The report lists the exact counted quest IDs/names, excluded/duplicate visited entries, ATT flags, direct and recursive filter results, character quest completion and ATT category paths. It includes the character, capture time and ATT version/profile.
+4. **Open zone in ATT** opens ATT's native zone minilist with current filters. `/atdart quest 12345` opens an individual quest in ATT. These actions do not change collection flags or filters.
+5. Click **Copy report**, then press Ctrl+C and send the text for comparison. `/atdart debug off` stops extra diagnostic capture; saved reports remain until that character's next refresh.
+
+Normal captures retain counted quest details too. Old snapshots need a Refresh before they have details. Reports are saved observations; ATT windows use current data/settings and may differ after changes. Deep capture visits only the same branches as the existing counter and does not traverse invisible parent branches. Distinct IDs count once. Diagnostics are bounded at 500 rows per zone and 8,000 per capture, with explicit truncation notices; the count itself is not capped. Parent filter failures are evidence to investigate, not proof that every counted quest is obtainable. The counting policy is unchanged in this diagnostic release. Native ATT actions are based on the inspected installed ATT interfaces; Fia's exact ATT version/client still needs a live check.

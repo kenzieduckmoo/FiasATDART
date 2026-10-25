@@ -93,6 +93,7 @@ function F.RefreshATT()
         F.attBusy=false;F.attMessage='Open ATT Dungeons & Raids, then Refresh to capture instance counts.';F.DrawIfShown();return
     end
     local stack={{node=root}};local visited={};local canonicalVisited={};local instances={};local ambiguous={};local zones={};local count=0
+    local questDebug={enabled=not not F.db.settings.questDebug,used=0}
     local journalKinds={};local journalTiers={}
     -- Encounter Journal IDs match ATT instanceID. Restore the user's tier.
     local selected=F.Safe(EJ_GetCurrentTier)
@@ -123,6 +124,8 @@ function F.RefreshATT()
                     if not seen[n]then
                     seen[n]=true
                     local kind=frame.kind;local tier=F.ATTNodeTier(n,frame.tier)
+                    local part=F.Model.Display(F.Clean(n.text or n.name) or (n.mapID and 'mapID '..n.mapID) or (n.headerID and 'headerID '..n.headerID) or (n.questID and 'questID '..n.questID) or 'group')
+                    local path=((frame.path and frame.path..' > ' or '')..part):sub(-900)
                     if H.RAIDS and n.headerID==H.RAIDS then kind='raid' end
                     if H.DUNGEONS and n.headerID==H.DUNGEONS then kind='dungeon' end
                     local zone=frame.zone
@@ -147,13 +150,21 @@ function F.RefreshATT()
                             end
                         end
                     end
-                    if zone and n.questID and not n.collected and n.visible~=false and n.collectible then
-                        local eligible=not app.GroupFilter or F.Safe(app.GroupFilter,n)
-                        local z=zones[zone]
-                        if eligible and z and not z.quests[n.questID] then z.quests[n.questID]=true;z.missing=z.missing+1 end
+                    if zone and n.questID then
+                        local z=zones[zone];local eligible;local status
+                        if n.collected then status='excluded: collected'
+                        elseif n.visible==false then status='excluded: hidden'
+                        elseif not n.collectible then status='excluded: not collectible'
+                        else
+                            eligible=not app.GroupFilter or F.Safe(app.GroupFilter,n)
+                            if not eligible then status='excluded: group filter'
+                            elseif z and z.quests[n.questID]then status='duplicate'
+                            else status='counted';if z then z.quests[n.questID]=true;z.missing=z.missing+1 end end
+                        end
+                        if z then F.RecordQuestDebug(app,z,n,status,path,reference,eligible,questDebug)end
                     end
                     if n.visible~=false then
-                        for _,child in ipairs(n.g or {}) do stack[#stack+1]={node=child,kind=kind,tier=tier,zone=zone,inInstances=inInstances,reference=reference,instanceParent=frame.instanceParent or n.instanceID} end
+                        for _,child in ipairs(n.g or {}) do stack[#stack+1]={node=child,kind=kind,tier=tier,zone=zone,path=path,inInstances=inInstances,reference=reference,instanceParent=frame.instanceParent or n.instanceID} end
                     end
                     end
                 end
@@ -163,7 +174,7 @@ function F.RefreshATT()
             F.attBusy=false;F.attMessage='ATT data could not be read by this version of the adapter. Update ATT and try Refresh. No collection data was changed.';F.DrawIfShown();return
         end
         if #stack>0 then C_Timer.After(.01,step);return end
-        local result={schema=4,seenAt=F.Now(),mode=F.Clean(root.modeString) or 'ATT active profile',dungeons={},raids={},zones={},completion={},instanceSource=instanceRoot and'main Dungeons & Raids'or'unavailable',ambiguousInstances=0}
+        local result={schema=5,seenAt=F.Now(),mode=F.Clean(root.modeString) or 'ATT active profile',attVersion=F.Safe(C_AddOns and C_AddOns.GetAddOnMetadata,'AllTheThings','Version'),questDebug=questDebug.enabled,dungeons={},raids={},zones={},completion={},instanceSource=instanceRoot and'main Dungeons & Raids'or'unavailable',ambiguousInstances=0}
         for key,r in pairs(instances) do
             if ambiguous[key]then result.ambiguousInstances=result.ambiguousInstances+1
             else
@@ -184,3 +195,4 @@ function F.OpenATT()
     local app=_G.AllTheThings
     if type(app)=='table' and type(app.ToggleMainList)=='function' then F.Safe(app.ToggleMainList) end
 end
+

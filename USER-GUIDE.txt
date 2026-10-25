@@ -110,3 +110,29 @@ Include addon version, client build/locale, command/page, steps and exact error,
 plus whether the data was current or an offline snapshot. Inspect timestamps
 before treating missing data as zero. Share a minimal redacted sample only when
 needed; notes, names, character histories and credentials should stay private.
+
+
+QUEST COUNT DEBUGGING (VERSION 0.1.3)
+If a zone count differs from ATT, type /atdart debug on, open ATT and allow it to
+finish preparing, then click Collector Refresh on the affected character. Click
+the zone under Unfinished Quests (or /atdart quests) to open its saved report.
+The report lists counted quest IDs/names, duplicates and excluded visited entries,
+ATT flags, direct/parent filter results, character quest completion, and paths
+through the ATT tree. It includes the capture time, character, ATT version/mode.
+
+Open zone in ATT opens ATT's native zone minilist with current filters. To inspect
+one ID, type /atdart quest 12345. Outside combat, with ATT enabled, these actions
+only open normal ATT windows; they do not change filters or collection data.
+Copy report selects the text: press Ctrl+C, then paste it for troubleshooting.
+Reports from saved characters can be copied while ATT is unavailable.
+
+/atdart quests 107 chooses by map ID; a full zone name can also be supplied.
+/atdart debug off stops future extra diagnostics; it does not erase saved reports.
+Normal captures retain the counted list. Older snapshots need a fresh capture.
+Only visited branches are reported; invisible parent branches are not scanned.
+Limits: 500 diagnostic rows per zone, 8000 per capture, with truncation notices.
+The distinct quest count is unchanged and is not capped by diagnostic limits.
+The release adds evidence rather than assuming the reason for an 18-versus-3
+mismatch. A recursive-filter failure highlights something to compare in ATT.
+Reports describe the saved capture; ATT windows describe current filters/data.
+Actual behavior in Fia's installed ATT version still needs her in-game check.

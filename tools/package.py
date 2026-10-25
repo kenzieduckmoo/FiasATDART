@@ -1,10 +1,10 @@
 from pathlib import Path
 import re,zipfile
 root=Path(__file__).resolve().parents[1]
-version=re.search(r'^## Version:\s*(\S+)',(root/'FiammaCollector.toc').read_text(),re.M).group(1)
+version=re.search(r'^## Version:\s*(\S+)',(root/'FiammaCollector.toc').read_text(encoding='utf-8-sig'),re.M).group(1)
 out=root.parent/f'FiammaCollector-{version}.zip'
 toc=root/'FiammaCollector.toc'
-runtime=[line.strip().replace('\\','/') for line in toc.read_text().splitlines() if line.strip() and not line.lstrip().startswith('#')]
+runtime=[line.strip().replace('\\','/') for line in toc.read_text(encoding='utf-8-sig').splitlines() if line.strip() and not line.lstrip().startswith('#')]
 files={toc,root/'LICENSE',root/'README.md',root/'CHANGELOG.md',root/'USER-GUIDE.txt'}
 for name in runtime:
     path=(root/name).resolve()

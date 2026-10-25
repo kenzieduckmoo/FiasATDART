@@ -73,7 +73,7 @@ function F.CreateWindow()
     F.open=button(f,'Open ATT',78,F.OpenATT)
     F.refresh=button(f,'Refresh',68,F.RefreshCurrent)
     F.help=button(f,'?',20,function()end)
-    tooltip(F.help,'Fiamma Collector | DuckMoo Services',{'Made for Fiamma. /fiamma or /atdart opens this window.','ATDART shows the lowest legacy completion. Ties are picked once per capture.','Other lists rank missing collectibles or unfinished quests. Expand/collapse each section and filter by expansion.','Legacy stops at Dragonflight. The War Within and Midnight are excluded from legacy instance rankings.','Counts follow the captured ATT profile and availability filters, not drop chances. Offline characters show saved snapshots.','All timestamps use your local time. Resize at the bottom-right; drag the title to move.'})
+    tooltip(F.help,'Fiamma Collector | DuckMoo Services',{'Made for Fiamma. /fiamma or /atdart opens this window.','ATDART shows the lowest legacy completion. Ties are picked once per capture.','Other lists rank missing collectibles or unfinished quests. Expand/collapse each section and filter by expansion.','Click a quest zone for counted IDs and an ATT zone window. /atdart debug on adds deeper diagnostics on the next Refresh.','Legacy stops at Dragonflight. The War Within and Midnight are excluded from legacy instance rankings.','Counts follow the captured ATT profile and availability filters, not drop chances. Offline characters show saved snapshots.','All timestamps use your local time. Resize at the bottom-right; drag the title to move.'})
     F.status=label(f,'',420,muted);F.status:SetPoint('TOPLEFT',5,-61);F.status:SetHeight(16)
     F.scroll=CreateFrame('ScrollFrame',nil,f,'UIPanelScrollFrameTemplate');F.scroll:SetPoint('TOPLEFT',4,-82);F.scroll:SetPoint('BOTTOMRIGHT',-22,5)
     F.body=CreateFrame('Frame',nil,F.scroll);F.body:SetPoint('TOPLEFT',F.scroll,'TOPLEFT');F.scroll:SetScrollChild(F.body)
@@ -106,6 +106,7 @@ local function row(y,height)
     end
     r:ClearAllPoints();r:SetPoint('TOPLEFT',0,-y);r:SetSize(F.width,height);r:Show()
     r:SetScript('OnEnter',nil);r:SetScript('OnLeave',nil)
+    r:SetScript('OnMouseUp',nil)
     r.toggle:Hide();r.filter:Hide();r.name:Show();r.number:Show();r.detail:Hide()
     r.name:SetWidth(F.width-90);r.detail:SetWidth(F.width-10)
     r:SetBackdropColor(F.used%2==0 and .055 or .075,.045,.075,1);r:SetBackdropBorderColor(0,0,0,0)
@@ -162,6 +163,10 @@ function F.Render()
             for _,entry in ipairs(list)do
                 local r=row(y,22);r.name:SetText(M.Plain(M.Display(entry.name)));r.number:SetText(tostring(entry.missing))
                 tooltip(r,M.Display(entry.name),{F.ATTExpansionLabel(entry,key=='zones'),entry.missing..(key=='zones' and ' unfinished quests' or ' missing collectibles'),'Counts follow the ATT profile saved at capture.'});y=y+22
+                if key=='zones'then
+                    r:SetScript('OnMouseUp',function(_,mouse)if mouse=='LeftButton'then F.ShowQuestDebug(entry,c,snapshot)end end)
+                    tooltip(r,M.Display(entry.name),{entry.missing..' unfinished quests','Click for the exact counted IDs and a copyable report.','Use /atdart debug on, then Refresh, for excluded entries and filter diagnostics.'})
+                end
             end
             if #list==0 then local r=row(y,22);r.name:SetWidth(F.width-10);r.name:SetText(snapshot and 'No matching opportunities in this snapshot.' or 'No snapshot yet.');r.number:SetText('');y=y+22 end
         end
@@ -176,3 +181,4 @@ function F.Show(skipInitialCapture)
     F.CreateWindow();F.frame:Show();F.Render()
     local c=F.db.characters[F.current];if not skipInitialCapture and c and not c.att and not F.attBusy then F.RefreshATT()end
 end
+

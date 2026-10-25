@@ -1,5 +1,5 @@
 local addon,F=...
-F.name=addon;F.version='0.1.2';F.Model={}
+F.name=addon;F.version='0.1.3';F.Model={}
 local M=F.Model
 function F.Safe(fn,...)
     if type(fn)~='function' then return nil end
@@ -61,5 +61,15 @@ SlashCmdList.FIAMMACOLLECTOR=function(command)
     command=(command or ''):lower():match('^%s*(.-)%s*$')
     if command=='minimap' then F.db.settings.hideMinimap=not F.db.settings.hideMinimap;F.CreateMinimap()
     elseif command=='refresh' then F.Show(true);F.RefreshCurrent()
+    elseif command:match('^debug')then
+        local value=command:match('^debug%s*(.*)$')
+        if value~='' and value~='on' and value~='off' then print('Fia: /atdart debug on or /atdart debug off');return end
+        F.db.settings.questDebug=value=='on' or value~='off' and not F.db.settings.questDebug
+        print('Fia quest debug '..(F.db.settings.questDebug and 'ON' or 'OFF')..'. Refresh this character, then click an Unfinished Quests zone.')
+        F.DrawIfShown()
+    elseif command=='quests' or command:match('^quests%s')then F.Show();F.ChooseQuestDebug(command:match('^quests%s+(.+)$'))
+    elseif command:match('^quest%s')then
+        if not F.OpenATTQuest(command:match('^quest%s+(%d+)$'))then print('Fia: ATT quest window unavailable. Use /atdart quest followed by a quest ID, outside combat.')end
     else F.Show()end
 end
+

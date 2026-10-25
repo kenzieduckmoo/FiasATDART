@@ -1,3 +1,9 @@
+# v0.1.3
+
+- Add clickable zone quest reports with counted IDs/names, copyable text and a native ATT zone window. Add `/atdart quests` and `/atdart quest ID`.
+- Add optional `/atdart debug on|off` capture of excluded/duplicate visited entries, direct and recursive filters, character quest completion, flags and ATT paths/version/profile. Bound stored diagnostic work and report truncation.
+- Preserve counting policy, retained/offline snapshots, ATT filters and collection state. Add a simulated 18-versus-3 parent-filter diagnostic case and native-window/read-only/UI-reuse checks. Real Fia-client validation remains pending.
+
 # v0.1.2
 
 - Exclude Dawn of the Infinite (Encounter Journal instance 1209) from ATDART selection only. Preserve its normal dungeon ranking and captured completion data.
@@ -18,3 +24,4 @@
 - ATDART target, legacy dungeon/raid rankings, unfinished zone quests, per-section expansion filters, and retained per-character snapshots.
 - Collapsible lists, shared scrolling, content-fitting height, saved position/size, minimap access, and /fiamma /atdart commands.
 - Native UI and adapter regression tests; real Retail client verification still needed.
+
